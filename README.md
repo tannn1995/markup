@@ -1,72 +1,119 @@
-GitHub Markup
-=============
+# R-Car Gen3 Evaluation Software Package for Linux
 
-This library is the first step of a journey that every markup file in a repository goes on before it is rendered on GitHub.com:
+The meta-rcar-gen3 layer of meta-renesas supports the Click-through licensed
+Linux Drivers and Gfx/MMP packages.
 
-1. This library converts the raw markup to HTML. See the list of [supported markup formats](#markups) below.
-1. The HTML is sanitized, aggressively removing things that could harm you and your kin—such as `script` tags, inline-styles, and `class` or `id` attributes. See the [sanitization filter](https://github.com/jch/html-pipeline/blob/master/lib/html/pipeline/sanitization_filter.rb) for the full whitelist.
-1. Syntax highlighting is performed on code blocks. See [github/linguist](https://github.com/github/linguist#syntax-highlighting) for more information about syntax highlighting.
-1. The HTML is passed through other filters in the [html-pipeline](https://github.com/jch/html-pipeline) that add special sauce, such as [emoji](https://github.com/jch/html-pipeline/blob/master/lib/html/pipeline/emoji_filter.rb), [task lists](https://github.com/github/task_list/blob/master/lib/task_list/filter.rb), [named anchors](https://github.com/jch/html-pipeline/blob/master/lib/html/pipeline/toc_filter.rb), [CDN caching for images](https://github.com/jch/html-pipeline/blob/master/lib/html/pipeline/camo_filter.rb), and  [autolinking](https://github.com/jch/html-pipeline/blob/master/lib/html/pipeline/autolink_filter.rb).
-1. The resulting HTML is rendered on GitHub.com.
+This README describes how to use these features and setting local.conf.
 
-Please note that **only the first step** is covered by this gem — the rest happens on GitHub.com.  In particular, `markup` itself does no sanitization of the resulting HTML, as it expects that to be covered by whatever pipeline is consuming the HTML.
-
-Please see our [contributing guidelines](CONTRIBUTING.md) before reporting an issue.
-
-Markups
--------
-
-The following markups are supported.  The dependencies listed are required if
-you wish to run the library. You can also run `script/bootstrap` to fetch them all.
-
-* [.markdown, .mdown, .mkdn, .md](http://daringfireball.net/projects/markdown/) -- `gem install commonmarker` (https://github.com/gjtorikian/commonmarker)
-* [.textile](https://www.promptworks.com/textile) -- `gem install RedCloth` (https://github.com/jgarber/redcloth)
-* [.rdoc](https://ruby.github.io/rdoc/) -- `gem install rdoc -v 3.6.1`
-* [.org](http://orgmode.org/) -- `gem install org-ruby` (https://github.com/wallyqs/org-ruby)
-* [.creole](http://wikicreole.org/) -- `gem install creole` (https://github.com/larsch/creole)
-* [.mediawiki, .wiki](http://www.mediawiki.org/wiki/Help:Formatting) -- `gem install wikicloth` (https://github.com/nricciar/wikicloth)
-* [.rst](http://docutils.sourceforge.net/rst.html) -- `pip install docutils`
-* [.asciidoc, .adoc, .asc](http://asciidoc.org/) -- `gem install asciidoctor` (http://asciidoctor.org)
-* [.pod](http://search.cpan.org/dist/perl/pod/perlpod.pod) -- `Pod::Simple::XHTML`
-  comes with Perl >= 5.10. Lower versions should install Pod::Simple from CPAN.
-
-
-Installation
------------
-
-```
-gem install github-markup
+```bash
+    I/   Build configuration
+    II/  Obtain and Install Renesas Graphics Drivers
 ```
 
-Usage
------
+**NOTE:**
 
-Basic form:
+* However, to have a completed local.conf, please also refer to Build
+Instruction in meta-renesas/meta-rcar-gen3/README.
 
-```ruby
-require 'github/markup'
+* In addition, these libraries are not provided with recipes. If you would like
+to use, you will need to get them from Renesas.
 
-GitHub::Markup.render('README.markdown', "* One\n* Two")
+## I/ Build configuration
+-------------------------
+
+* Add the target board to local.conf
+
+    * For Salvator-X board
+
+    ```bash
+       MACHINE = "salvator-x"
+    ```
+
+    * For R-Car Starter Kit Premier(H3ULCB) board
+
+    ```bash
+       MACHINE = "h3ulcb"
+    ```
+
+    * For R-Car Starter Kit Pro(M3ULCB) board
+
+    ```bash
+       MACHINE = "m3ulcb"
+    ```
+
+    * For Ebisu board
+
+    ```bash
+       MACHINE = "ebisu"
+    ```
+
+* Set SOC family name
+
+    * For H3: r8a7795
+
+    ```bash
+       SOC_FAMILY = "r8a7795"
+    ```
+
+    * For M3: r8a7796
+
+    ```bash
+       SOC_FAMILY = "r8a7796"
+    ```
+
+    * For M3N: r8a77965
+
+    ```bash
+       SOC_FAMILY = "r8a77965"
+    ```
+    * For M3N: r8a77965
+
+    ```bash
+       SOC_FAMILY = "r8a77965"
+    ```
+
+    * For E3: r8a77990
+
+    ```bash
+        # Already added in machine config: ebisu.conf
+        SOC_FAMILY = "r8a77990"
+    ```
+
+* When using the click-through version of the gfx/mmp packages, you need to add
+the following to your local.conf
+
+```bash
+   DISTRO_FEATURES_append = " use_eva_pkg"
 ```
 
-More realistic form:
+## II/ Obtain and Install Renesas Graphics Drivers
+--------------------------------------------------
 
-```ruby
-require 'github/markup'
+Before setting up the build environment, you need to download the proprietary
+drivers.
 
-GitHub::Markup.render(file, File.read(file))
+* Download Renesas graphic drivers with a "click through" license from
+[Renesas website][rcar Linux Drivers] and unzip them into a folder.
+
+**NOTE:**
+
+* You have to register with a free account on MyRenesas and accept the license
+conditions before downloading the drivers.
+The operation is fast and simple nevertheless mandatory to access evaluation of
+non open-source drivers for free.
+Once you registered, you can download two zip files.
+
+```bash
+$ cd <folder containing the two zip files>
+$ unzip -o R-Car_Gen3_Series_Evaluation_Software_Package_for_Linux-*.zip
+$ unzip -o R-Car_Gen3_Series_Evaluation_Software_Package_of_Linux_Drivers-*.zip
 ```
 
-And a convenience form:
+To install them into the correct place in the Yocto BSP, a copy script is used.
 
-```ruby
-require 'github/markup'
-
-GitHub::Markup.render_s(GitHub::Markups::MARKUP_MARKDOWN, "* One\n* Two")
+```bash
+$ cd ./meta-renesas
+$ sh meta-rcar-gen3/docs/sample/copyscript/copy_evaproprietary_softwares.sh <path to the folder containing the packages>
 ```
 
-
-Contributing
-------------
-
-See [Contributing](CONTRIBUTING.md).
+[rcar Linux Drivers]: https://www.renesas.com/us/en/solutions/automotive/rcar-download/rcar-demoboard-2.html
